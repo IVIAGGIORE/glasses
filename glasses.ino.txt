@@ -1,0 +1,106 @@
+#define PIN_LEFT_TRIG 12
+#define PIN_LEFT_ECHO 11
+#define PIN_LEFT_VIBRO 10
+#define PIN_RIGHT_TRIG 7
+#define PIN_RIGHT_ECHO 8
+#define PIN_RIGHT_VIBRO 9
+
+long feq_left, feq_right;
+unsigned long time_read, time_left, time_rigth, time_port;
+
+void setup() {
+
+  // Инициализируем взаимодействие по последовательному порту
+  Serial.begin (9600);
+  
+  //Определяем вводы и выводы
+  pinMode(PIN_LEFT_TRIG, OUTPUT);
+  pinMode(PIN_LEFT_VIBRO, OUTPUT);
+  pinMode(PIN_LEFT_ECHO, INPUT);
+  pinMode(PIN_RIGHT_TRIG, OUTPUT);
+  pinMode(PIN_RIGHT_VIBRO, OUTPUT);
+  pinMode(PIN_RIGHT_ECHO, INPUT);
+}
+
+void loop() {
+
+  if ((millis()-time_read)>500)
+  {
+    feq_left = get_left()*15;
+    feq_right = get_right()*15;
+    time_read = millis();    
+  }
+
+  if ((millis()-time_left)>120)
+  {
+    digitalWrite(PIN_LEFT_VIBRO, LOW);
+  }
+
+  if ((millis()-time_left)>feq_left)
+  {
+    digitalWrite(PIN_LEFT_VIBRO, HIGH);
+    time_left = millis();
+  }
+
+
+  if ((millis()-time_rigth)>120)
+  {
+    digitalWrite(PIN_RIGHT_VIBRO, LOW);
+  }
+
+  if ((millis()-time_rigth)>feq_right)
+  {
+    digitalWrite(PIN_RIGHT_VIBRO, HIGH);
+    time_rigth = millis();
+  }
+
+  /*if ((millis()-time_port)>500)
+  {
+
+    Serial.print("Расстояние до объекта: ");
+    Serial.print(feq_left);
+    Serial.println(" см.");
+    
+    Serial.print("Расстояние до объекта: ");
+    Serial.print(feq_right);
+    Serial.println(" см.");
+
+    time_port = millis();
+  }*/
+
+}
+
+
+long get_left() {
+  // Сначала генерируем короткий импульс длительностью 2-5 микросекунд.
+  digitalWrite(PIN_LEFT_TRIG, LOW);
+  delayMicroseconds(5);
+  digitalWrite(PIN_LEFT_TRIG, HIGH);
+
+  // Выставив высокий уровень сигнала, ждем около 10 микросекунд. В этот момент датчик будет посылать сигналы с частотой 40 КГц.
+  delayMicroseconds(10);
+  digitalWrite(PIN_LEFT_TRIG, LOW);
+
+  //  Время задержки акустического сигнала на эхолокаторе.
+  long duration = pulseIn(PIN_LEFT_ECHO, HIGH);
+
+  // Теперь осталось преобразовать время в расстояние
+  return (duration / 2) / 29.1;
+}
+
+long get_right() {
+  // Сначала генерируем короткий импульс длительностью 2-5 микросекунд.
+  digitalWrite(PIN_RIGHT_TRIG, LOW);
+  delayMicroseconds(5);
+  digitalWrite(PIN_RIGHT_TRIG, HIGH);
+
+  // Выставив высокий уровень сигнала, ждем около 10 микросекунд. В этот момент датчик будет посылать сигналы с частотой 40 КГц.
+  delayMicroseconds(10);
+  digitalWrite(PIN_RIGHT_TRIG, LOW);
+
+  //  Время задержки акустического сигнала на эхолокаторе.
+  long duration = pulseIn(PIN_RIGHT_ECHO, HIGH);
+
+  // Теперь осталось преобразовать время в расстояние
+  return (duration / 2) / 29.1;
+}
